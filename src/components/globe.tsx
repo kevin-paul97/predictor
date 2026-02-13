@@ -17,7 +17,8 @@ function latLonToVector3(lat: number, lon: number, radius: number): THREE.Vector
 }
 
 function Earth() {
-  const texture = useLoader(THREE.TextureLoader, "/textures/earth.jpg");
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  const texture = useLoader(THREE.TextureLoader, `${basePath}/textures/earth.jpg`);
   texture.colorSpace = THREE.SRGBColorSpace;
   return (
     <mesh>
