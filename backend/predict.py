@@ -13,7 +13,7 @@ from config import Config
 from models import create_location_regressor
 from datasets import create_transforms
 
-MODEL_PATH = os.path.join(SUBMODULE_DIR, "models", "regressor_final.pth")
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "model.pth")
 
 
 class Predictor:
