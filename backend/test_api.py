@@ -5,7 +5,8 @@ import pytest
 from PIL import Image
 from httpx import AsyncClient, ASGITransport
 
-from main import app, lifespan
+import main
+from main import app
 from predict import Predictor
 
 
@@ -61,10 +62,11 @@ def predictor():
 
 @pytest.fixture()
 async def client():
-    async with lifespan(app):
-        transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as ac:
-            yield ac
+    main.predictor = Predictor()
+    main.model_ready.set()
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac
 
 
 # ---------------------------------------------------------------------------

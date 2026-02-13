@@ -1,5 +1,5 @@
 import os
-from contextlib import asynccontextmanager
+import threading
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,16 +9,16 @@ import io
 from predict import Predictor
 
 predictor: Predictor | None = None
+model_ready = threading.Event()
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+def _load_model():
     global predictor
     predictor = Predictor()
-    yield
+    model_ready.set()
 
 
-app = FastAPI(title="Satellite Image Geolocation Predictor", lifespan=lifespan)
+app = FastAPI(title="Satellite Image Geolocation Predictor")
 
 app.add_middleware(
     CORSMiddleware,
@@ -28,8 +28,22 @@ app.add_middleware(
 )
 
 
+@app.on_event("startup")
+def startup():
+    thread = threading.Thread(target=_load_model, daemon=True)
+    thread.start()
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "model_loaded": model_ready.is_set()}
+
+
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
+    if not model_ready.is_set():
+        raise HTTPException(status_code=503, detail="Model is still loading, please try again shortly")
+
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
 
