@@ -9,7 +9,8 @@ export async function predictLocation(file: File): Promise<PredictionResult> {
 
   let response: Response;
   try {
-    response = await fetch("http://localhost:8000/predict", {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    response = await fetch(`${apiUrl}/predict`, {
       method: "POST",
       body: formData,
     });
